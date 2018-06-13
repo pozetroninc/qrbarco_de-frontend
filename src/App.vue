@@ -75,6 +75,7 @@ export default {
       method: 'text', // 'text' | 'base64'
       text: '',
       base64: '',
+      recaptcha_ready: false,
       loading: false,
       result: null,
       error: null
@@ -82,8 +83,13 @@ export default {
   },
   computed: {
     disabled: function () {
-      return !this.$data[this.$data.method] || this.$data.loading;
+      return !this.$data[this.$data.method] || this.$data.loading || !this.$data.recaptcha_ready;
     }
+  },
+  mounted: function () {
+    grecaptcha.ready(() => {
+      this.$data.recaptcha_ready = true
+    })
   },
   methods: {
 
@@ -93,22 +99,28 @@ export default {
       this.$data.error = null
       this.$data.loading = true
 
-      let data = {}
-      data[this.$data.method] = this.$data[this.$data.method]
+      grecaptcha.execute(Configs.RECAPTCHA_SITE_KEY, {action: 'homepage'}).then((token) => {
+        let data = {}
+        data[this.$data.method] = this.$data[this.$data.method]
+        data['recaptcha'] = token
 
-      this.$http.post(QRCODE_SERVICE, data, { emulateJSON: true, responseType: 'arraybuffer' }).then(function(res){
-        if (res.status == 200) {
-          this.$data.result = `data:${res.headers.get('content-type')};base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(res.data)))}`
-        }
+        this.$http.post(QRCODE_SERVICE, data, { emulateJSON: true, responseType: 'arraybuffer' }).then(function(res){
+          if (res.status == 200) {
+            this.$data.result = `data:${res.headers.get('content-type')};base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(res.data)))}`
+          }
+          this.$data.loading = false
+        }, function(err) {
+          if (err.status == 400 && err.body.description) {
+            this.$data.error = err.body.description
+          } else {
+            this.$data.error = 'Oops! Something went wrong.'
+          }
+          this.$data.loading = false
+        });
+      }, (error) => {
+        this.$data.error = 'Oops! Could not verify you are not a robot.'
         this.$data.loading = false
-      }, function(err) {
-        if (err.status == 400 && err.body.description) {
-          this.$data.error = err.body.description
-        } else {
-          this.$data.error = 'Oops! Something went wrong.'
-        }
-        this.$data.loading = false
-      });
+      })
 
     }
   }

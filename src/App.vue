@@ -1,26 +1,33 @@
 <template>
   <div id="app">
 
-    <section class="section">
-      <div class="container">
-        <h1 class="title">
-          Barcode Generator
-        </h1>
-        <p class="subtitle">
-          Generate Barcodes (currently QR codes) from <strong>Text</strong> or <strong>Base64</strong> payloads!
-        </p>
+    <section class="hero is-primary">
+
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            Barcode Generator
+          </h1>
+          <p class="subtitle">
+            Generate Barcodes (currently QR codes) from <strong>Text</strong> or <strong>Base64</strong> payloads!
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-foot">
+        <nav class="tabs is-boxed">
+          <div class="container">
+            <ul>
+              <li :class="{'is-active': method=='text'}"><a @click.prevent="method='text'">From&nbsp;<strong>Text</strong></a></li>
+              <li :class="{'is-active': method=='base64'}"><a @click.prevent="method='base64'">From&nbsp;<strong>Base64</strong></a></li>
+            </ul>
+          </div>
+        </nav>
       </div>
     </section>
 
     <section class="section">
       <div class="container">
-
-        <div class="tabs">
-          <ul>
-            <li :class="{'is-active': method=='text'}"><a @click.prevent="method='text'">From&nbsp;<strong>Text</strong></a></li>
-            <li :class="{'is-active': method=='base64'}"><a @click.prevent="method='base64'">From&nbsp;<strong>Base64</strong></a></li>
-          </ul>
-        </div>
 
         <div class="columns">
 
@@ -42,7 +49,7 @@
             <div id='result' class="notification" v-if="result != null">
               <img :src="result" />
               <br/>
-              <a class="button is-info" :href="result" download="qrcode.png">
+              <a class="button is-primary" :href="result" download="qrcode.png">
                 <span class="icon is-small">
                   <i class="fas fa-download"></i>
                 </span>

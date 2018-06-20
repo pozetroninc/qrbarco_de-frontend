@@ -1,0 +1,39 @@
+{
+  "DEV_QRCODE_SERVICE": "http://localhost:9001",
+  "PROD_QRCODE_SERVICE": "https://service.qrbarco.de",
+  "RECAPTCHA_SITE_KEY": "6Lfw2F4UAAAAAFCNqxuq3GQf0zfCGgSjJ2aTzzeB",
+  "SASS_VARS": {
+    "color_schemes": {
+      "dusk": {
+        "primary": {"r": 54,"g": 50, "b":55},
+        "secondary-1": {"r": 45, "g":66, "b":98},
+        "secondary-2": {"r": 115, "g":96, "b":91},
+        "secondary-3": {"r": 208, "g":150, "b":131}
+      },
+      "green": {
+        "primary": {"r": 72, "g":107, "b":0},
+        "secondary-1": {"r": 162, "g":197, "b":35},
+        "secondary-2": {"r": 46, "g":70, "b":0},
+        "secondary-3": {"r": 125, "g":68, "b":39}
+      },
+      "vibrant": {
+        "primary": {"r": 55, "g":94, "b":151},
+        "secondary-1": {"r": 251, "g":101, "b":66},
+        "secondary-2": {"r": 255, "g":187, "b":0},
+        "secondary-3": {"r": 63, "g":104, "b":28}
+      },
+      "citrus": {
+        "primary": {"r": 250, "g":175, "b":8},
+        "secondary-1": {"r": 250, "g":129, "b":47},
+        "secondary-2": {"r": 250, "g":64, "b":50},
+        "secondary-3": {"r": 63, "g":104, "b":28}
+      },
+      "grecian": {
+        "primary": {"r": 41, "g":136, "b":188},
+        "secondary-1": {"r": 47, "g":73, "b":110},
+        "secondary-2": {"r": 237, "g":140, "b":114},
+        "secondary-3": {"r": 63, "g":104, "b":28}
+      }
+    }
+  }
+}

@@ -78,6 +78,7 @@ import configs from './configs.json'
 import Raven from 'raven-js'
 
 const QRCODE_SERVICE = (process.env.NODE_ENV === 'development' ? configs.DEV_QRCODE_SERVICE : configs.PROD_QRCODE_SERVICE)
+const RECAPTCHA_ENABLED = configs.RECAPTCHA_SITE_KEY?true:false
 
 // Select a random color scheme
 const colors_schemes = Object.keys(configs.SASS_VARS.color_schemes)
@@ -100,15 +101,68 @@ export default {
   },
   computed: {
     disabled: function () {
-      return !this.$data[this.$data.method] || this.$data.loading || !this.$data.recaptcha_ready;
+      return !this.$data[this.$data.method] || this.$data.loading || (RECAPTCHA_ENABLED && !this.$data.recaptcha_ready);
     }
   },
+
   mounted: function () {
-    grecaptcha.ready(() => {
-      this.$data.recaptcha_ready = true
-    })
+    if (RECAPTCHA_ENABLED) {
+      let recaptchaScript = document.createElement('script')
+      recaptchaScript.onload = () => {
+        window.grecaptcha.ready(() => {
+          this.$data.recaptcha_ready = true
+        })
+      }
+      recaptchaScript.setAttribute('src', `https://www.google.com/recaptcha/api.js?render=${configs.RECAPTCHA_SITE_KEY}`)
+      document.body.appendChild(recaptchaScript)
+    }
   },
   methods: {
+
+    fetchQRCode (recaptcha_token = null) {
+      let data = {}
+      data[this.$data.method] = this.$data[this.$data.method]
+      data['color_scheme'] = this.$data.active_color_scheme
+      if (recaptcha_token) {
+        data['recaptcha'] = recaptcha_token
+      }
+
+      this.$http.post(QRCODE_SERVICE, data, { emulateJSON: true, responseType: 'arraybuffer' }).then((response) => {
+        if (response.status == 200) {
+          this.$data.result = `data:${response.headers.get('content-type')};base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(response.data)))}`
+        }
+        this.$data.loading = false
+      }, (error) => {
+        this.$data.loading = false
+
+        let error_data = {}
+        try {
+          error_data = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(error.data)))
+        } catch (e) {
+          // Forgive only invalid json errors
+          if (e.name !== "SyntaxError") {
+            throw e
+          }
+        }
+
+        if (error.status == 400 && error_data.description) {
+          this.$data.error = error_data.description
+        } else {
+          this.$data.error = 'Oops! Something went wrong.'
+        }
+
+        if (Raven.isSetup()) {
+          Raven.captureMessage('Failed to generate barcode', {
+            level: 'warning',
+            extra: {
+              error,
+              data,
+              description: this.$data.error
+            }
+          })
+        }
+      })
+    },
 
     onSubmit() {
 
@@ -116,61 +170,27 @@ export default {
       this.$data.error = null
       this.$data.loading = true
 
-      grecaptcha.execute(configs.RECAPTCHA_SITE_KEY, {action: 'homepage'}).then((token) => {
-        let data = {}
-        data[this.$data.method] = this.$data[this.$data.method]
-        data['recaptcha'] = token
-        data['color_scheme'] = this.$data.active_color_scheme
-
-        this.$http.post(QRCODE_SERVICE, data, { emulateJSON: true, responseType: 'arraybuffer' }).then((response) => {
-          if (response.status == 200) {
-            this.$data.result = `data:${response.headers.get('content-type')};base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(response.data)))}`
-          }
-          this.$data.loading = false
+      if (RECAPTCHA_ENABLED) {
+        window.grecaptcha.execute(configs.RECAPTCHA_SITE_KEY, {action: 'homepage'}).then((token) => {
+          this.fetchQRCode(token)
         }, (error) => {
           this.$data.loading = false
-
-          let error_data = {}
-          try {
-            error_data = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(error.data)))
-          } catch (e) {
-            // Forgive only invalid json errors
-            if (e.name !== "SyntaxError") {
-              throw e
-            }
-          }
-
-          if (error.status == 400 && error_data.description) {
-            this.$data.error = error_data.description
-          } else {
-            this.$data.error = 'Oops! Something went wrong.'
-          }
+          this.$data.error = 'Oops! Could not verify you are not a robot.'
 
           if (Raven.isSetup()) {
-            Raven.captureMessage('Failed to generate barcode', {
+            Raven.captureMessage('Failed to verify recaptcha on client-side', {
               level: 'warning',
               extra: {
-                error,
-                data,
-                description: this.$data.error
+                error
               }
             })
           }
-        });
-      }, (error) => {
-        this.$data.loading = false
-        this.$data.error = 'Oops! Could not verify you are not a robot.'
 
-        if (Raven.isSetup()) {
-          Raven.captureMessage('Failed to verify recaptcha on client-side', {
-            level: 'warning',
-            extra: {
-              error
-            }
-          })
-        }
+        })
+      } else {
+        this.fetchQRCode()
+      }
 
-      })
     }
   }
 }

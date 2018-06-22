@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-
     <section :class="['hero', active_color_scheme?`is-${active_color_scheme}-primary`:'is-primary']">
 
       <div class="hero-body">
@@ -67,6 +66,8 @@
       </div>
     </section>
 
+    <a v-if="GITHUB_LINK" :href="GITHUB_LINK"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
   </div>
 </template>
 
@@ -85,6 +86,7 @@ export default {
   data () {
     return {
       active_color_scheme: active_color_scheme,
+      GITHUB_LINK: configs.GITHUB_LINK,
       method: 'text', // 'text' | 'base64'
       text: '',
       base64: '',

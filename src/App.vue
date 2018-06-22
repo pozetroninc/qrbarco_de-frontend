@@ -75,6 +75,8 @@
 import './main.scss'
 import configs from './configs.json'
 
+import Raven from 'raven-js'
+
 const QRCODE_SERVICE = (process.env.NODE_ENV === 'development' ? configs.DEV_QRCODE_SERVICE : configs.PROD_QRCODE_SERVICE)
 
 // Select a random color scheme
@@ -120,24 +122,55 @@ export default {
         data['recaptcha'] = token
         data['color_scheme'] = this.$data.active_color_scheme
 
-        this.$http.post(QRCODE_SERVICE, data, { emulateJSON: true, responseType: 'arraybuffer' }).then(function(res){
-          if (res.status == 200) {
-            this.$data.result = `data:${res.headers.get('content-type')};base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(res.data)))}`
+        this.$http.post(QRCODE_SERVICE, data, { emulateJSON: true, responseType: 'arraybuffer' }).then((response) => {
+          if (response.status == 200) {
+            this.$data.result = `data:${response.headers.get('content-type')};base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(response.data)))}`
           }
           this.$data.loading = false
-        }, function(err) {
-          if (err.status == 400 && err.body.description) {
-            this.$data.error = err.body.description
+        }, (error) => {
+          this.$data.loading = false
+
+          let error_data = {}
+          try {
+            error_data = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(error.data)))
+          } catch (e) {
+            // Forgive only invalid json errors
+            if (e.name !== "SyntaxError") {
+              throw e
+            }
+          }
+
+          if (error.status == 400 && error_data.description) {
+            this.$data.error = error_data.description
           } else {
             this.$data.error = 'Oops! Something went wrong.'
           }
-          this.$data.loading = false
+
+          if (Raven.isSetup()) {
+            Raven.captureMessage('Failed to generate barcode', {
+              level: 'warning',
+              extra: {
+                error,
+                data,
+                description: this.$data.error
+              }
+            })
+          }
         });
       }, (error) => {
-        this.$data.error = 'Oops! Could not verify you are not a robot.'
         this.$data.loading = false
-      })
+        this.$data.error = 'Oops! Could not verify you are not a robot.'
 
+        if (Raven.isSetup()) {
+          Raven.captureMessage('Failed to verify recaptcha on client-side', {
+            level: 'warning',
+            extra: {
+              error
+            }
+          })
+        }
+
+      })
     }
   }
 }

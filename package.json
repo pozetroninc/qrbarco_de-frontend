@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "bulma": "^0.7.1",
+    "raven-js": "^3.26.3",
     "vue": "^2.5.16",
     "vue-resource": "^1.5.1"
   },

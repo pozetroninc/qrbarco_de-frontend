@@ -74,6 +74,7 @@
 <script>
 import './main.scss'
 import configs from './configs.json'
+import axios from 'axios'
 import Raven from 'raven-js'
 
 // Prepeare some configs
@@ -133,36 +134,36 @@ export default {
   },
   methods: {
     fetchQRCode(recaptcha_token = null) {
-      let data = {}
-      data[this.method] = this[this.method]
-      data['color_scheme'] = this.ACTIVE_COLOR_SCHEME_KEY
+      let data = new URLSearchParams()
+      data.append(this.method, this[this.method])
+      data.append('color_scheme', this.ACTIVE_COLOR_SCHEME_KEY)
+
       if (recaptcha_token) {
-        data['recaptcha'] = recaptcha_token
+        data.append('recaptcha', recaptcha_token)
       }
 
-      this.$http
+      axios
         .post(QRCODE_SERVICE, data, {
-          emulateJSON: true,
           responseType: 'arraybuffer'
         })
-        .then(
-          response => {
-            if (response.status == 200) {
-              this.result = `data:${response.headers.get(
-                'content-type'
-              )};base64,${btoa(
-                String.fromCharCode.apply(null, new Uint8Array(response.data))
-              )}`
-            }
-            this.loading = false
-          },
-          error => {
-            this.loading = false
-
+        .then(response => {
+          if (response.status == 200) {
+            this.result = `data:${response.headers['content-type']};base64,${btoa(
+              String.fromCharCode.apply(null, new Uint8Array(response.data))
+            )}`
+          }
+          this.loading = false
+        })
+        .catch(error => {
+          this.loading = false
+          if (error.response) {
             let error_data = {}
             try {
               error_data = JSON.parse(
-                String.fromCharCode.apply(null, new Uint8Array(error.data))
+                String.fromCharCode.apply(
+                  null,
+                  new Uint8Array(error.response.data)
+                )
               )
             } catch (e) {
               // Forgive only invalid json errors
@@ -171,24 +172,27 @@ export default {
               }
             }
 
-            if (error.status == 400 && error_data.description) {
+            if (error.response.status == 400 && error_data.description) {
               this.error = error_data.description
             } else {
               this.error = 'Oops! Something went wrong.'
             }
-
-            if (Raven.isSetup()) {
-              Raven.captureMessage('Failed to generate barcode', {
-                level: 'warning',
-                extra: {
-                  error,
-                  data,
-                  description: this.error
-                }
-              })
-            }
+          } else {
+            this.error = 'Oops! Something went wrong.'
           }
-        )
+
+          if (Raven.isSetup()) {
+            Raven.captureMessage('Failed to generate barcode', {
+              level: 'warning',
+              extra: {
+                error: error,
+                response: error.response,
+                data,
+                description: this.error
+              }
+            })
+          }
+        })
     },
 
     onSubmit() {

@@ -107,9 +107,9 @@ export default {
   computed: {
     disabled: function() {
       return (
-        !this.$data[this.$data.method] ||
-        this.$data.loading ||
-        (RECAPTCHA_ENABLED && !this.$data.recaptcha_ready)
+        !this[this.method] ||
+        this.loading ||
+        (RECAPTCHA_ENABLED && !this.recaptcha_ready)
       )
     }
   },
@@ -119,7 +119,7 @@ export default {
       let recaptchaScript = document.createElement('script')
       recaptchaScript.onload = () => {
         window.grecaptcha.ready(() => {
-          this.$data.recaptcha_ready = true
+          this.recaptcha_ready = true
         })
       }
       recaptchaScript.setAttribute(
@@ -134,8 +134,8 @@ export default {
   methods: {
     fetchQRCode(recaptcha_token = null) {
       let data = {}
-      data[this.$data.method] = this.$data[this.$data.method]
-      data['color_scheme'] = this.$data.ACTIVE_COLOR_SCHEME_KEY
+      data[this.method] = this[this.method]
+      data['color_scheme'] = this.ACTIVE_COLOR_SCHEME_KEY
       if (recaptcha_token) {
         data['recaptcha'] = recaptcha_token
       }
@@ -148,16 +148,16 @@ export default {
         .then(
           response => {
             if (response.status == 200) {
-              this.$data.result = `data:${response.headers.get(
+              this.result = `data:${response.headers.get(
                 'content-type'
               )};base64,${btoa(
                 String.fromCharCode.apply(null, new Uint8Array(response.data))
               )}`
             }
-            this.$data.loading = false
+            this.loading = false
           },
           error => {
-            this.$data.loading = false
+            this.loading = false
 
             let error_data = {}
             try {
@@ -172,9 +172,9 @@ export default {
             }
 
             if (error.status == 400 && error_data.description) {
-              this.$data.error = error_data.description
+              this.error = error_data.description
             } else {
-              this.$data.error = 'Oops! Something went wrong.'
+              this.error = 'Oops! Something went wrong.'
             }
 
             if (Raven.isSetup()) {
@@ -183,7 +183,7 @@ export default {
                 extra: {
                   error,
                   data,
-                  description: this.$data.error
+                  description: this.error
                 }
               })
             }
@@ -192,9 +192,9 @@ export default {
     },
 
     onSubmit() {
-      this.$data.result = null
-      this.$data.error = null
-      this.$data.loading = true
+      this.result = null
+      this.error = null
+      this.loading = true
 
       if (RECAPTCHA_ENABLED) {
         window.grecaptcha
@@ -204,8 +204,8 @@ export default {
               this.fetchQRCode(token)
             },
             error => {
-              this.$data.loading = false
-              this.$data.error = 'Oops! Could not verify you are not a robot.'
+              this.loading = false
+              this.error = 'Oops! Could not verify you are not a robot.'
 
               if (Raven.isSetup()) {
                 Raven.captureMessage(

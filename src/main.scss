@@ -4,7 +4,7 @@
 @import "~bulma/sass/utilities/derived-variables";
 
 // 2. Load some extra color schemes from js configs
-$color-schemes: getJsSassVars($key: 'color_schemes');
+$color-schemes: getJsSassVars($key: 'COLOR_SCHEMES');
 
 @each $name, $scheme in $color-schemes {
 

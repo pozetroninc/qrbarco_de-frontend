@@ -6,7 +6,7 @@
   "SENTRY_PROJECT": "",
   "GITHUB_LINK": "https://github.com/pozetroninc/pozetron-barcode-service",
   "SASS_VARS": {
-    "color_schemes": {
+    "COLOR_SCHEMES": {
       "dusk": {
         "primary": {"r": 54,"g": 50, "b":55},
         "secondary-1": {"r": 45, "g":66, "b":98},

@@ -1,14 +1,14 @@
-import configs from './configs'
+import config from './../app.config.json'
 import Vue from 'vue'
-import App from './App.vue'
 import Raven from 'raven-js'
 import RavenVue from 'raven-js/plugins/vue'
+import App from './App.vue'
 
 Vue.config.productionTip = false
 
-if (configs.SENTRY_KEY && configs.SENTRY_PROJECT) {
+if (config.SENTRY_KEY && config.SENTRY_PROJECT) {
   Raven
-    .config(`https://${configs.SENTRY_KEY}@sentry.io/${configs.SENTRY_PROJECT}`, {
+    .config(`https://${config.SENTRY_KEY}@sentry.io/${config.SENTRY_PROJECT}`, {
       environment: process.env.NODE_ENV
     })
     .addPlugin(RavenVue, Vue)

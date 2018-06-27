@@ -1,104 +1,93 @@
 <template>
   <div id="app">
-    <section :class="['hero', ACTIVE_COLOR_SCHEME_KEY?`is-${ACTIVE_COLOR_SCHEME_KEY}-primary`:'is-primary']">
 
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title">
-            Barcode Generator
-          </h1>
-          <p class="subtitle">
-            Generate Barcodes (currently QR codes) from <strong>Text</strong> or <strong>Base64</strong> payloads!
-          </p>
-        </div>
-      </div>
-
-      <div class="hero-foot">
-        <nav class="tabs is-boxed">
-          <div class="container">
-            <ul>
-              <li :class="{'is-active': method=='text'}"><a @click.prevent="method='text'">From&nbsp;<strong>Text</strong></a></li>
-              <li :class="{'is-active': method=='base64'}"><a @click.prevent="method='base64'">From&nbsp;<strong>Base64</strong></a></li>
-            </ul>
-          </div>
-        </nav>
-      </div>
-    </section>
+    <app-header
+      :active-color-scheme="ACTIVE_COLOR_SCHEME_KEY"
+      :active-method="method"
+      :handle-method-change="switchMethod"
+    />
 
     <section class="section">
       <div class="container">
-
         <div class="columns">
 
           <div class="column is-two-thirds">
-            <form id="payload-form" @submit.prevent="onSubmit">
-              <textarea class="textarea" v-if="method == 'text'" v-model="text" placeholder="Insert text payload.."></textarea>
-              <textarea class="textarea" v-else-if="method == 'base64'" v-model="base64" placeholder="Insert base64 payload.."></textarea>
-              <br/>
-              <button :class="['button is-large full-width', ACTIVE_COLOR_SCHEME_KEY?`is-${ACTIVE_COLOR_SCHEME_KEY}-secondary-1`:'is-primary', {'is-loading': loading}]" :disabled="disabled">
-                <span class="icon is-small">
-                  <i class="fas fa-qrcode"></i>
-                </span>
-                <span>Generate</span>
-              </button>
-            </form>
+            <app-form
+              :payload="payload"
+              :active-color-scheme="ACTIVE_COLOR_SCHEME_KEY"
+              :active-method="method"
+              :handle-submit="handleSubmit"
+              :loading="loading"
+              :disabled="disabled"
+              @payload-input="payload = $event.target.value"
+            />
           </div>
 
           <div class="column">
-            <div id='result' class="notification" v-if="result != null">
-              <img :src="result" />
-              <br/>
-              <a :class="['button', ACTIVE_COLOR_SCHEME_KEY?`is-${ACTIVE_COLOR_SCHEME_KEY}-secondary-2`:'is-primary']" :href="result" download="qrcode.png">
-                <span class="icon is-small">
-                  <i class="fas fa-download"></i>
-                </span>
-                <span>Download</span>
-              </a>
-            </div>
-            <div id="error" class="notification is-danger" v-if="error != null">
-              <button class="delete" @click.prevent="error=null"></button>
-              {{error}}
-            </div>
+            <app-error
+              v-if="error != null"
+              :error="error"
+              @close="error=null"
+            />
+            <app-result
+              v-if="result != null"
+              :active-color-scheme="ACTIVE_COLOR_SCHEME_KEY"
+              :result="result"
+            />
           </div>
 
         </div>
-
       </div>
     </section>
 
-    <a v-if="GITHUB_LINK" :href="GITHUB_LINK"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+    <a v-if="GITHUB_LINK" :href="GITHUB_LINK">
+      <img
+        style="position: absolute; top: 0; right: 0; border: 0;"
+        src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+        alt="Fork me on GitHub"
+      >
+    </a>
 
   </div>
 </template>
 
 <script>
-import './main.scss'
-import configs from './configs.json'
+import './styles/main.scss'
+import config from './../app.config.json'
 import axios from 'axios'
 import Raven from 'raven-js'
+import AppHeader from './components/Header.vue'
+import AppForm from './components/Form.vue'
+import AppResult from './components/Result.vue'
+import AppError from './components/Error.vue'
 
 // Prepeare some configs
 const QRCODE_SERVICE =
   process.env.NODE_ENV === 'development'
-    ? configs.DEV_QRCODE_SERVICE
-    : configs.PROD_QRCODE_SERVICE
-const RECAPTCHA_ENABLED = configs.RECAPTCHA_SITE_KEY ? true : false
+    ? config.DEV_QRCODE_SERVICE
+    : config.PROD_QRCODE_SERVICE
+const RECAPTCHA_ENABLED = config.RECAPTCHA_SITE_KEY ? true : false
 
 // Select a random color scheme
-const COLOR_SCHEMES_KEYS = Object.keys(configs.SASS_VARS.COLOR_SCHEMES)
+const COLOR_SCHEMES_KEYS = Object.keys(config.SASS_VARS.COLOR_SCHEMES)
 const ACTIVE_COLOR_SCHEME_KEY = COLOR_SCHEMES_KEYS.length
   ? COLOR_SCHEMES_KEYS[Math.floor(Math.random() * COLOR_SCHEMES_KEYS.length)]
   : null
 
 export default {
   name: 'app',
+  components: {
+    'app-header': AppHeader,
+    'app-form': AppForm,
+    'app-result': AppResult,
+    'app-error': AppError
+  },
   data() {
     return {
       ACTIVE_COLOR_SCHEME_KEY: ACTIVE_COLOR_SCHEME_KEY,
-      GITHUB_LINK: configs.GITHUB_LINK,
+      GITHUB_LINK: config.GITHUB_LINK,
       method: 'text', // 'text' | 'base64'
-      text: '',
-      base64: '',
+      payload: '',
       recaptcha_ready: false,
       loading: false,
       result: null,
@@ -108,13 +97,12 @@ export default {
   computed: {
     disabled: function() {
       return (
-        !this[this.method] ||
+        !this.payload ||
         this.loading ||
         (RECAPTCHA_ENABLED && !this.recaptcha_ready)
       )
     }
   },
-
   mounted: function() {
     if (RECAPTCHA_ENABLED) {
       let recaptchaScript = document.createElement('script')
@@ -126,16 +114,20 @@ export default {
       recaptchaScript.setAttribute(
         'src',
         `https://www.google.com/recaptcha/api.js?render=${
-          configs.RECAPTCHA_SITE_KEY
+          config.RECAPTCHA_SITE_KEY
         }`
       )
       document.body.appendChild(recaptchaScript)
     }
   },
   methods: {
+    switchMethod(m) {
+      this.method = m
+      this.payload = ''
+    },
     fetchQRCode(recaptcha_token = null) {
       let data = new URLSearchParams()
-      data.append(this.method, this[this.method])
+      data.append(this.method, this.payload)
       data.append('color_scheme', this.ACTIVE_COLOR_SCHEME_KEY)
 
       if (recaptcha_token) {
@@ -148,7 +140,9 @@ export default {
         })
         .then(response => {
           if (response.status == 200) {
-            this.result = `data:${response.headers['content-type']};base64,${btoa(
+            this.result = `data:${
+              response.headers['content-type']
+            };base64,${btoa(
               String.fromCharCode.apply(null, new Uint8Array(response.data))
             )}`
           }
@@ -194,15 +188,14 @@ export default {
           }
         })
     },
-
-    onSubmit() {
+    handleSubmit() {
       this.result = null
       this.error = null
       this.loading = true
 
       if (RECAPTCHA_ENABLED) {
         window.grecaptcha
-          .execute(configs.RECAPTCHA_SITE_KEY, {action: 'homepage'})
+          .execute(config.RECAPTCHA_SITE_KEY, {action: 'homepage'})
           .then(
             token => {
               this.fetchQRCode(token)
@@ -231,15 +224,3 @@ export default {
   }
 }
 </script>
-
-<style>
-#result {
-  text-align: center;
-}
-#error {
-  background-color: #dd0000;
-}
-.full-width {
-  width: 100%;
-}
-</style>

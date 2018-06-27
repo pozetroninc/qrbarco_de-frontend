@@ -1,9 +1,8 @@
 {
   "DEV_QRCODE_SERVICE": "http://localhost:9001",
   "PROD_QRCODE_SERVICE": "https://service.qrbarco.de",
-  "RECAPTCHA_SITE_KEY": "",
-  "SENTRY_KEY": "",
-  "SENTRY_PROJECT": "",
+  "RECAPTCHA_SITE_KEY": null,
+  "SENTRY_API_URL": null,
   "GITHUB_LINK": "https://github.com/pozetroninc/pozetron-barcode-service",
   "SASS_VARS": {
     "COLOR_SCHEMES": {

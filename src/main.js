@@ -6,9 +6,9 @@ import App from './App.vue'
 
 Vue.config.productionTip = false
 
-if (config.SENTRY_KEY && config.SENTRY_PROJECT) {
+if (config.SENTRY_API_URL) {
   Raven
-    .config(`https://${config.SENTRY_KEY}@sentry.io/${config.SENTRY_PROJECT}`, {
+    .config(`${config.SENTRY_API_URL}`, {
       environment: process.env.NODE_ENV
     })
     .addPlugin(RavenVue, Vue)

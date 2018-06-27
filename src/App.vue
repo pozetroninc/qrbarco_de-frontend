@@ -54,6 +54,7 @@
 <script>
 import './styles/main.scss'
 import config from './../app.config.json'
+import sassConfig from './../app.sass.config.json'
 import axios from 'axios'
 import Raven from 'raven-js'
 import AppHeader from './components/Header.vue'
@@ -69,7 +70,7 @@ const QRCODE_SERVICE =
 const RECAPTCHA_ENABLED = config.RECAPTCHA_SITE_KEY ? true : false
 
 // Select a random color scheme
-const COLOR_SCHEMES_KEYS = Object.keys(config.SASS_VARS.COLOR_SCHEMES)
+const COLOR_SCHEMES_KEYS = Object.keys(sassConfig.COLOR_SCHEMES)
 const ACTIVE_COLOR_SCHEME_KEY = COLOR_SCHEMES_KEYS.length
   ? COLOR_SCHEMES_KEYS[Math.floor(Math.random() * COLOR_SCHEMES_KEYS.length)]
   : null

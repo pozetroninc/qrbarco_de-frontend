@@ -1,6 +1,6 @@
 var sass = require('node-sass');
 var sassUtils = require('node-sass-utils')(sass);
-var config = require(__dirname + '/app.config.json');
+var appSassConfig = require(__dirname + '/app.sass.config.json');
 
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
         functions: {
           'getJsSassVars($key: \'\')': function (key) {
             key = key.getValue().split('.');
-            var result = config.SASS_VARS;
+            var result = appSassConfig;
             for (var i = 0; i < key.length; i++) {
               result = result[key[i]];
             }

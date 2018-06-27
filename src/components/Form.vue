@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import config from './../../app.config.json'
+import sassConfig from './../../app.sass.config.json'
 
 export default {
   name: 'app-form',
@@ -24,7 +24,7 @@ export default {
       type: String,
       validator: function(value) {
         return value
-          ? Object.keys(config.SASS_VARS.COLOR_SCHEMES).indexOf(value) !== -1
+          ? Object.keys(sassConfig.COLOR_SCHEMES).indexOf(value) !== -1
           : true
       }
     },

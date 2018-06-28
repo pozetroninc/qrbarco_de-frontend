@@ -17,6 +17,12 @@ Or, create production build (into a `dist/` directory)
 
     npm run build
 
+
+Or, run tests
+
+    npm run test:unit
+
+
 ## App configuration (`app.config.json`)
 
 | Key                      | Type     | Description     |

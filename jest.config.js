@@ -5,6 +5,12 @@ module.exports = {
     'json',
     'vue'
   ],
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "./src/components/*.{js,vue}",
+    "!/src/App.vue",
+    "!/src/main.js"
+  ],
   transform: {
     '^.+\\.vue$': 'vue-jest',
     '.+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$': 'jest-transform-stub',

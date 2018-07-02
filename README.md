@@ -8,6 +8,13 @@ Install Dependencies
     npm install
 
 
+Configure app
+
+    cp app.config.example.json app.config.json
+
+    nano app.config.json
+
+
 Then, run development server (on `http://localhost:8080`)
 
     npm run serve

@@ -1,8 +1,19 @@
 import { shallowMount } from '@vue/test-utils'
 import AppHeader from '@/components/Header.vue'
 
+jest.mock('@/../app.sass.config.json', () => ({
+  COLOR_SCHEMES: {
+    'test-color-scheme': {
+      'primary': { r: 54, g: 50, b: 55 },
+      'secondary-1': { r: 45, g: 66, b: 98 },
+      'secondary-2': { r: 115, g: 96, b: 91 },
+      'secondary-3': { r: 208, g: 150, b: 131 }
+    }
+  }
+}))
+
 describe('Header.vue', () => {
-  const SOME_COLOR_SCHEME_NAME = 'dusk' // TODO: do not rely on user-provided configs, monkey-patch them instead.
+  const SOME_COLOR_SCHEME_NAME = 'test-color-scheme'
   const SOME_METHOD_NAME = 'base64'
   const SOME_METHOD_CHANGE_HANDLER = (method) => method
 

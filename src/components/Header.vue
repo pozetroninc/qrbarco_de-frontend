@@ -14,8 +14,8 @@
       <nav class="tabs is-boxed">
         <div class="container">
           <ul>
-            <li :class="{'is-active': activeMethod=='text'}"><a @click.prevent="handleMethodChange('text')">From&nbsp;<strong>Text</strong></a></li>
-            <li :class="{'is-active': activeMethod=='base64'}"><a @click.prevent="handleMethodChange('base64')">From&nbsp;<strong>Base64</strong></a></li>
+            <li :class="{'text': true, 'is-active': activeMethod=='text'}"><a @click.prevent="handleMethodChange('text')">From&nbsp;<strong>Text</strong></a></li>
+            <li :class="{'base64': true, 'is-active': activeMethod=='base64'}"><a @click.prevent="handleMethodChange('base64')">From&nbsp;<strong>Base64</strong></a></li>
           </ul>
         </div>
       </nav>

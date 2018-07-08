@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/pozetroninc/qrbarco_de-frontend.svg?style=svg&circle-token=320161206f9cfe0e9078e58e6d58a5819d064d63)](https://circleci.com/gh/pozetroninc/qrbarco_de-frontend)
+
 # QRBarco.de Frontend
 This is the Vue.js Frontend for the qrbarco.de website
 

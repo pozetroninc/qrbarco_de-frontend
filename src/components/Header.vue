@@ -6,7 +6,7 @@
           Barcode Generator
         </h1>
         <p class="subtitle">
-          Generate Barcodes (currently QR codes) from <strong>Text</strong> or <strong>Base64</strong> payloads!
+          Generate 2D Barcodes (QR codes) from <strong>Text</strong> or <strong>Base64</strong>
         </p>
       </div>
     </div>

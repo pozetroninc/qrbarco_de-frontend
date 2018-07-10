@@ -5,7 +5,7 @@
 const fs = require('fs')
 fs.writeFileSync('./app.config.json', `{
   "DEV_QRCODE_SERVICE": "http://localhost:9001",
-  "PROD_QRCODE_SERVICE": ${process.env.PROD_QRCODE_SERVICE},
-  "RECAPTCHA_SITE_KEY": ${process.env.RECAPTCHA_SITE_KEY},
-  "SENTRY_API_URL": ${process.env.SENTRY_API_URL},
+  "PROD_QRCODE_SERVICE": "${process.env.PROD_QRCODE_SERVICE}",
+  "RECAPTCHA_SITE_KEY": "${process.env.RECAPTCHA_SITE_KEY}",
+  "SENTRY_API_URL": "${process.env.SENTRY_API_URL}",
   "GITHUB_LINK": "https://github.com/pozetroninc/qrbarco_de-frontend"\n}`)

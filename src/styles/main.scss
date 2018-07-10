@@ -23,5 +23,7 @@ $color-schemes: getJsSassVars($key: 'COLOR_SCHEMES');
 
 }
 
+$footer-background-color: $white;
+
 // 3. Import the rest of Bulma
 @import '~bulma/bulma'

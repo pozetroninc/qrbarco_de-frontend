@@ -48,6 +48,14 @@
       >
     </a>
 
+    <footer class="footer">
+      <div class="content has-text-centered">
+        <p>
+          from <a href="https://www.pozetron.com">Pozetron</a> with <span class="icon is-small has-text-danger"><i class="fas fa-heart"></i></span><br>
+        </p>
+      </div>
+    </footer>
+
   </div>
 </template>
 

@@ -12,6 +12,7 @@ $color-schemes: getJsSassVars($key: 'COLOR_SCHEMES');
     $secondary-1-color: rgb(map-get(map-get($scheme, secondary-1), r), map-get(map-get($scheme, secondary-1), g), map-get(map-get($scheme, secondary-1), b));
     $secondary-2-color: rgb(map-get(map-get($scheme, secondary-2), r), map-get(map-get($scheme, secondary-2), g), map-get(map-get($scheme, secondary-2), b));
     $secondary-3-color: rgb(map-get(map-get($scheme, secondary-3), r), map-get(map-get($scheme, secondary-3), g), map-get(map-get($scheme, secondary-3), b));
+    $navbar-item-active-color: $primary-color;
 
     $addColor: (
         "#{$name}-primary":($primary-color, findColorInvert($primary-color)),

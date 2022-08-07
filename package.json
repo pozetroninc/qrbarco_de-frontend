@@ -9,7 +9,7 @@
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.27.2",
     "bulma": "^0.7.1",
     "raven-js": "^3.26.3",
     "vue": "^2.5.16"

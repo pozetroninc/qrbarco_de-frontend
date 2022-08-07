@@ -1,4 +1,4 @@
-var sass = require('node-sass');
+var sass = require('sass');
 var sassUtils = require('node-sass-utils')(sass);
 var appSassConfig = require(__dirname + '/app.sass.config.json');
 

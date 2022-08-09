@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/qrbarco_de
     docker:
-      - image: circleci/node:8-stretch
+      - image: cimg/node:latest
     steps:
       - checkout
       - run:

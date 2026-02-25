@@ -1,4 +1,5 @@
-import { shallowMount } from '@vue/test-utils'
+import {describe, it, expect, beforeEach} from 'vitest'
+import {shallowMount} from '@vue/test-utils'
 import AppError from '@/components/Error.vue'
 
 describe('Error.vue', () => {
@@ -8,14 +9,15 @@ describe('Error.vue', () => {
 
   beforeEach(() => {
     wrapper = shallowMount(AppError, {
-      propsData: { error: SOME_ERROR_TEXT }
+      props: {error: SOME_ERROR_TEXT}
     })
   })
 
   describe('Properties', () => {
     it('has a required error string prop', () => {
-      expect(wrapper.vm.$options.props.error.type).toBe(String)
-      expect(wrapper.vm.$options.props.error.required).toBeTruthy()
+      const errorProp = wrapper.vm.$options.props.error
+      expect(errorProp.type).toBe(String)
+      expect(errorProp.required).toBeTruthy()
     })
   })
 
@@ -23,12 +25,9 @@ describe('Error.vue', () => {
     it('renders props.error when passed', () => {
       expect(wrapper.text()).toMatch(SOME_ERROR_TEXT)
     })
-    it('emits a "close" event when close button clicked', () => {
-      const spy = jest.spyOn(wrapper.vm, '$emit')
-
-      wrapper.find('.delete').trigger('click')
-      expect(wrapper.vm.$emit).toBeCalledWith('close')
-      spy.mockReset()
+    it('emits a "close" event when close button clicked', async () => {
+      await wrapper.find('.delete').trigger('click')
+      expect(wrapper.emitted('close')).toHaveLength(1)
     })
   })
 })

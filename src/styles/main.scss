@@ -1,29 +1,41 @@
-// 1. Import initial bulma variables and utilities
-@import "~bulma/sass/utilities/initial-variables";
-@import "~bulma/sass/utilities/functions";
-@import "~bulma/sass/utilities/derived-variables";
+// Import Bulma (v1.x is a single CSS import)
+@use "bulma/css/bulma.css";
 
-// 2. Load some extra color schemes from js configs
-$color-schemes: getJsSassVars($key: 'COLOR_SCHEMES');
-
-@each $name, $scheme in $color-schemes {
-
-    $primary-color: rgb(map-get(map-get($scheme, primary), r), map-get(map-get($scheme, primary), g), map-get(map-get($scheme, primary), b));
-    $secondary-1-color: rgb(map-get(map-get($scheme, secondary-1), r), map-get(map-get($scheme, secondary-1), g), map-get(map-get($scheme, secondary-1), b));
-    $secondary-2-color: rgb(map-get(map-get($scheme, secondary-2), r), map-get(map-get($scheme, secondary-2), g), map-get(map-get($scheme, secondary-2), b));
-    $secondary-3-color: rgb(map-get(map-get($scheme, secondary-3), r), map-get(map-get($scheme, secondary-3), g), map-get(map-get($scheme, secondary-3), b));
-
-    $addColor: (
-        "#{$name}-primary":($primary-color, findColorInvert($primary-color)),
-        "#{$name}-secondary-1":($secondary-1-color, findColorInvert($secondary-1-color)),
-        "#{$name}-secondary-2":($secondary-2-color, findColorInvert($secondary-2-color)),
-        "#{$name}-secondary-3":($secondary-3-color, findColorInvert($secondary-3-color))
-    );
-    $colors: map-merge($colors, $addColor);
-
+// Color scheme CSS custom properties (set at runtime from JS)
+// Default fallbacks use Bulma's primary blue
+:root {
+  --scheme-primary-rgb: 0, 209, 178;
+  --scheme-primary: rgb(var(--scheme-primary-rgb));
+  --scheme-secondary-1-rgb: 62, 142, 208;
+  --scheme-secondary-1: rgb(var(--scheme-secondary-1-rgb));
+  --scheme-secondary-2-rgb: 72, 199, 142;
+  --scheme-secondary-2: rgb(var(--scheme-secondary-2-rgb));
+  --scheme-secondary-3-rgb: 63, 104, 28;
+  --scheme-secondary-3: rgb(var(--scheme-secondary-3-rgb));
 }
 
-$footer-background-color: $white;
+// Dynamic color scheme classes used by components
+.is-scheme-primary {
+  background-color: var(--scheme-primary) !important;
+  color: #fff !important;
+}
 
-// 3. Import the rest of Bulma
-@import '~bulma/bulma'
+.is-scheme-secondary-1 {
+  background-color: var(--scheme-secondary-1) !important;
+  color: #fff !important;
+}
+
+.is-scheme-secondary-2 {
+  background-color: var(--scheme-secondary-2) !important;
+  color: #fff !important;
+}
+
+.is-scheme-secondary-3 {
+  background-color: var(--scheme-secondary-3) !important;
+  color: #fff !important;
+}
+
+// Override Bulma footer background
+.footer {
+  background-color: #fff;
+}

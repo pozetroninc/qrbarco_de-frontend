@@ -1,10 +1,9 @@
 <template>
   <div id="app">
 
-    <app-header
-      :active-color-scheme="ACTIVE_COLOR_SCHEME_KEY"
+    <AppHeader
       :active-method="method"
-      :handle-method-change="switchMethod"
+      @method-change="switchMethod"
     />
 
     <section class="section">
@@ -12,26 +11,24 @@
         <div class="columns">
 
           <div class="column is-two-thirds">
-            <app-form
+            <AppForm
               :payload="payload"
-              :active-color-scheme="ACTIVE_COLOR_SCHEME_KEY"
               :active-method="method"
-              :handle-submit="handleSubmit"
               :loading="loading"
               :disabled="disabled"
+              @submit="handleSubmit"
               @payload-input="payload = $event.target.value"
             />
           </div>
 
           <div class="column">
-            <app-error
+            <AppError
               v-if="error != null"
               :error="error"
-              @close="error=null"
+              @close="error = null"
             />
-            <app-result
+            <AppResult
               v-if="result != null"
-              :active-color-scheme="ACTIVE_COLOR_SCHEME_KEY"
               :result="result"
             />
           </div>
@@ -59,177 +56,153 @@
   </div>
 </template>
 
-<script>
-import './styles/main.scss'
-import config from './../app.config.json'
-import sassConfig from './../app.sass.config.json'
+<script setup>
+import {ref, computed, onMounted} from 'vue'
+import * as Sentry from '@sentry/vue'
 import axios from 'axios'
-import Raven from 'raven-js'
+import config from '../app.config.json'
+import {getRandomColorScheme, applyColorScheme} from './colorSchemes.js'
+import './styles/main.scss'
 import AppHeader from './components/Header.vue'
 import AppForm from './components/Form.vue'
 import AppResult from './components/Result.vue'
 import AppError from './components/Error.vue'
 
-// Prepeare some configs
 const QRCODE_SERVICE =
-  process.env.NODE_ENV === 'development'
+  import.meta.env.MODE === 'development'
     ? config.DEV_QRCODE_SERVICE
     : config.PROD_QRCODE_SERVICE
-const RECAPTCHA_ENABLED = config.RECAPTCHA_SITE_KEY ? true : false
+const RECAPTCHA_ENABLED = !!config.RECAPTCHA_SITE_KEY
+const GITHUB_LINK = config.GITHUB_LINK
 
-// Select a random color scheme
-const COLOR_SCHEMES_KEYS = Object.keys(sassConfig.COLOR_SCHEMES)
-const ACTIVE_COLOR_SCHEME_KEY = COLOR_SCHEMES_KEYS.length
-  ? COLOR_SCHEMES_KEYS[Math.floor(Math.random() * COLOR_SCHEMES_KEYS.length)]
-  : null
+const ACTIVE_COLOR_SCHEME_KEY = getRandomColorScheme()
 
-export default {
-  name: 'app',
-  components: {
-    'app-header': AppHeader,
-    'app-form': AppForm,
-    'app-result': AppResult,
-    'app-error': AppError
-  },
-  data() {
-    return {
-      ACTIVE_COLOR_SCHEME_KEY: ACTIVE_COLOR_SCHEME_KEY,
-      GITHUB_LINK: config.GITHUB_LINK,
-      method: 'text', // 'text' | 'base64'
-      payload: '',
-      recaptcha_ready: false,
-      loading: false,
-      result: null,
-      error: null
-    }
-  },
-  computed: {
-    disabled: function() {
-      return (
-        !this.payload ||
-        this.loading ||
-        (RECAPTCHA_ENABLED && !this.recaptcha_ready)
-      )
-    }
-  },
-  mounted: function() {
-    if (RECAPTCHA_ENABLED) {
-      let recaptchaScript = document.createElement('script')
-      recaptchaScript.onload = () => {
-        window.grecaptcha.ready(() => {
-          this.recaptcha_ready = true
-        })
+const method = ref('text')
+const payload = ref('')
+const recaptchaReady = ref(false)
+const loading = ref(false)
+const result = ref(null)
+const error = ref(null)
+
+const disabled = computed(() => {
+  return (
+    !payload.value ||
+    loading.value ||
+    (RECAPTCHA_ENABLED && !recaptchaReady.value)
+  )
+})
+
+function switchMethod(m) {
+  method.value = m
+  payload.value = ''
+}
+
+function fetchQRCode(recaptchaToken = null) {
+  const data = new URLSearchParams()
+  data.append(method.value, payload.value)
+  data.append('color_scheme', ACTIVE_COLOR_SCHEME_KEY)
+
+  if (recaptchaToken) {
+    data.append('recaptcha', recaptchaToken)
+  }
+
+  axios
+    .post(QRCODE_SERVICE, data, {
+      responseType: 'arraybuffer'
+    })
+    .then(response => {
+      if (response.status === 200) {
+        result.value = `data:${
+          response.headers['content-type']
+        };base64,${btoa(
+          String.fromCharCode.apply(null, new Uint8Array(response.data))
+        )}`
       }
-      recaptchaScript.setAttribute(
-        'src',
-        `https://www.google.com/recaptcha/api.js?render=${
-          config.RECAPTCHA_SITE_KEY
-        }`
-      )
-      document.body.appendChild(recaptchaScript)
-    }
-  },
-  methods: {
-    switchMethod(m) {
-      this.method = m
-      this.payload = ''
-    },
-    fetchQRCode(recaptcha_token = null) {
-      let data = new URLSearchParams()
-      data.append(this.method, this.payload)
-      data.append('color_scheme', this.ACTIVE_COLOR_SCHEME_KEY)
+      loading.value = false
+    })
+    .catch(err => {
+      loading.value = false
+      if (err.response) {
+        let errorData = {}
+        try {
+          errorData = JSON.parse(
+            String.fromCharCode.apply(
+              null,
+              new Uint8Array(err.response.data)
+            )
+          )
+        } catch (e) {
+          if (e.name !== 'SyntaxError') {
+            throw e
+          }
+        }
 
-      if (recaptcha_token) {
-        data.append('recaptcha', recaptcha_token)
+        if (err.response.status === 400 && errorData.description) {
+          error.value = errorData.description
+        } else {
+          error.value = 'Oops! Something went wrong.'
+        }
+      } else {
+        error.value = 'Oops! Something went wrong.'
       }
 
-      axios
-        .post(QRCODE_SERVICE, data, {
-          responseType: 'arraybuffer'
-        })
-        .then(response => {
-          if (response.status == 200) {
-            this.result = `data:${
-              response.headers['content-type']
-            };base64,${btoa(
-              String.fromCharCode.apply(null, new Uint8Array(response.data))
-            )}`
-          }
-          this.loading = false
-        })
-        .catch(error => {
-          this.loading = false
-          if (error.response) {
-            let error_data = {}
-            try {
-              error_data = JSON.parse(
-                String.fromCharCode.apply(
-                  null,
-                  new Uint8Array(error.response.data)
-                )
-              )
-            } catch (e) {
-              // Forgive only invalid json errors
-              if (e.name !== 'SyntaxError') {
-                throw e
-              }
-            }
+      Sentry.captureMessage('Failed to generate barcode', {
+        level: 'warning',
+        extra: {
+          error: err,
+          response: err.response,
+          data,
+          description: error.value
+        }
+      })
+    })
+}
 
-            if (error.response.status == 400 && error_data.description) {
-              this.error = error_data.description
-            } else {
-              this.error = 'Oops! Something went wrong.'
-            }
-          } else {
-            this.error = 'Oops! Something went wrong.'
-          }
+function handleSubmit() {
+  result.value = null
+  error.value = null
+  loading.value = true
 
-          if (Raven.isSetup()) {
-            Raven.captureMessage('Failed to generate barcode', {
+  if (RECAPTCHA_ENABLED) {
+    window.grecaptcha
+      .execute(config.RECAPTCHA_SITE_KEY, {action: 'homepage'})
+      .then(
+        token => {
+          fetchQRCode(token)
+        },
+        err => {
+          loading.value = false
+          error.value = 'Oops! Could not verify you are not a robot.'
+
+          Sentry.captureMessage(
+            'Failed to verify recaptcha on client-side',
+            {
               level: 'warning',
-              extra: {
-                error: error,
-                response: error.response,
-                data,
-                description: this.error
-              }
-            })
-          }
-        })
-    },
-    handleSubmit() {
-      this.result = null
-      this.error = null
-      this.loading = true
-
-      if (RECAPTCHA_ENABLED) {
-        window.grecaptcha
-          .execute(config.RECAPTCHA_SITE_KEY, {action: 'homepage'})
-          .then(
-            token => {
-              this.fetchQRCode(token)
-            },
-            error => {
-              this.loading = false
-              this.error = 'Oops! Could not verify you are not a robot.'
-
-              if (Raven.isSetup()) {
-                Raven.captureMessage(
-                  'Failed to verify recaptcha on client-side',
-                  {
-                    level: 'warning',
-                    extra: {
-                      error
-                    }
-                  }
-                )
-              }
+              extra: {error: err}
             }
           )
-      } else {
-        this.fetchQRCode()
-      }
-    }
+        }
+      )
+  } else {
+    fetchQRCode()
   }
 }
+
+onMounted(() => {
+  applyColorScheme(ACTIVE_COLOR_SCHEME_KEY)
+
+  if (RECAPTCHA_ENABLED) {
+    const recaptchaScript = document.createElement('script')
+    recaptchaScript.onload = () => {
+      window.grecaptcha.ready(() => {
+        recaptchaReady.value = true
+      })
+    }
+    recaptchaScript.setAttribute(
+      'src',
+      `https://www.google.com/recaptcha/api.js?render=${config.RECAPTCHA_SITE_KEY}`
+    )
+    document.body.appendChild(recaptchaScript)
+  }
+})
 </script>

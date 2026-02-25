@@ -1,20 +1,16 @@
-import config from './../app.config.json'
-import Vue from 'vue'
-import Raven from 'raven-js'
-import RavenVue from 'raven-js/plugins/vue'
+import config from '../app.config.json'
+import {createApp} from 'vue'
+import * as Sentry from '@sentry/vue'
 import App from './App.vue'
 
-Vue.config.productionTip = false
+const app = createApp(App)
 
 if (config.SENTRY_API_URL) {
-  Raven
-    .config(`${config.SENTRY_API_URL}`, {
-      environment: process.env.NODE_ENV
-    })
-    .addPlugin(RavenVue, Vue)
-    .install()
+  Sentry.init({
+    app,
+    dsn: config.SENTRY_API_URL,
+    environment: import.meta.env.MODE
+  })
 }
 
-new Vue({
-  render: h => h(App)
-}).$mount('#app')
+app.mount('#app')
